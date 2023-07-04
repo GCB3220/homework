@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="utf-8">
+   <title>Scatter Plot Example</title>
+   <!-- Include ECharts library -->
+   <script src="https://cdn.jsdelivr.net/npm/echarts@5.2.2/dist/echarts.min.js"></script>
+   <!-- Include D3.js library -->
+   <script src="https://d3js.org/d3.v7.min.js"></script>
+   <!-- Set the width and height of the chart container -->
+   <style>
+      #chart-container {
+         width: 800px;
+         height: 600px;
+      }
+   </style>
+</head>
+<body>
+   <div class='col-12' id='popContainer-right-1' style="height: 500px"></div>
+   <script>
+      var myData2 = [
+         ['20 L', 10.85, '2KDM_1 VS 2LHC_1', '<strong>20 L->A</strong>; 45 L->Y'],
+         ['20 L', 10.66, '2LHC_1 VS 2LHE_1', '<strong>20 L->A</strong>; 25 T->I; 45 L->Y'],
+         ['24 G', 10.76, '2JWU_1 VS 2LHC_1', '<strong>24 G->A</strong>; 33 I->Y; 45 L->Y; 49 I->T'],
+         ['25 T', 10.66, '2LHC_1 VS 2LHE_1', '20 L->A; <strong>25 T->I</strong>; 45 L->Y'],
+         ['25 T', 2.88, '2LHC_1 VS 2LHG_1', '<strong>25 T->I</strong>; 45 L->Y'],
+         ['25 T', 2.42, '2JWS_1 VS 2LHC_1', '<strong>25 T->I</strong>; 30 F->I; 50 K->L'],
+         ['30 F', 2.42, '2JWS_1 VS 2LHC_1', '25 T->I; <strong>30 F->I</strong>; 50 K->L'],
+         ['30 F', 1.89, '2KDL_1 VS 2LHC_1', '<strong>30 F->I</strong>'],
+         ['33 I', 10.76, '2JWU_1 VS 2LHC_1', '24 G->A; <strong>33 I->Y</strong>; 45 L->Y; 49 I->T'],
+         ['45 L', 10.93, '2LHC_1 VS 2LHD_1', '<strong>45 L->Y</strong>'],
+         ['45 L', 10.85, '2KDM_1 VS 2LHC_1', '20 L->A; <strong>45 L->Y</strong>'],
+         ['45 L', 10.76, '2JWU_1 VS 2LHC_1', '24 G->A; 33 I->Y; <strong>45 L->Y</strong>; 49 I->T'],
+         ['45 L', 10.66, '2LHC_1 VS 2LHE_1', '20 L->A; 25 T->I; <strong>45 L->Y</strong>'],
+         ['45 L', 2.88, '2LHC_1 VS 2LHG_1', '25 T->I; <strong>45 L->Y</strong>'],
+         ['49 I', 10.76, '2JWU_1 VS 2LHC_1', '24 G->A; 33 I->Y; 45 L->Y; <strong>49 I->T</strong>'],
+         ['50 K', 2.42, '2JWS_1 VS 2LHC_1', '25 T->I; 30 F->I; <strong>50 K->L</strong>']
+      ];
+
+      var max = 20;
+
+      function mutpopright(entity, eleID, myData, max) {
+         var dom = document.getElementById(eleID);
+         var myChart = echarts.init(dom, null, {
+            renderer: 'svg',
+            useDirtyRect: false
+         });
+
+         var option;
+         var data = myData;
+
+         console.log(max);
+
+         const schema = [
+            {
+               name: 'Mut',
+               index: 0,
+               text: 'Mut'
+            },
+            {
+               name: 'RMSD',
+               index: 1,
+               text: 'RMSD'
+            },
+         ];
+
+         const colorScale = d3.scaleSequential(d3.interpolateTurbo).domain([0, max]);
+
+         const itemStyle = {
+            opacity: 0.8,
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            shadowColor: 'rgba(0,0,0,0.3)',
+            color: function(params) {
+               var value = params.value[1]; // Y value
+               return colorScale(value);
+            },
+         };
+
+         option = {
+            color: ['#dd4444'],
+            legend: {
+               top: 10,
+               textStyle: {
+                  fontSize: 16
+               }
+            },
+            grid: {
+               left: '10%',
+               right: 150,
+               top: '18%',
+               bottom: '10%'
+            },
+            tooltip: {
+               backgroundColor: 'rgba(255,255,255,0.7)',
+               formatter: function(param) {
+                  var value = param.value;
+                  return (
+                     '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">' +
+                     value[2] +
+                     '</div>' +
+                     value[3] +
+                     '<br>' +
+                     'RMSD: ' +
+                     value[1] +
+                     '<br>'
+                  );
+               }
+            },
+            xAxis: {
+               type: 'category',
+               name: 'Mut',
+               nameGap: 16,
+               nameTextStyle: {
+                  fontSize: 16
+               },
+               splitLine: {
+                  show: false
+               }
+            },
+            yAxis: {
+               type: 'value',
+               name: 'RMSD',
+               nameLocation: 'end',
+               nameGap: 20,
+               nameTextStyle: {
+                  fontSize: 16
+               },
+               splitLine: {
+                  show: false
+               }
+            },
+            visualMap: [
+               {
+                  left: 'right',
+                  top: '10%',
+                  dimension: 1,
+                  min: 0,
+                  max: max,
+                  itemWidth: 20,
+                  itemHeight: 150,
+                  calculable: true,
+                  precision: 0.1,
+                  textGap: 30,
+                  textStyle: {
+                     color: '#000'
+                  },
+                  inRange: {
+                     color: ['#a3a3f8', '#3e3ebd']
+                  },
+                  outOfRange: {
+                     color: '#999'
+                  },
+                  controller: {
+                     inRange: {
+                        color: '#3e3ebd'
+                     }
+                  }
+               }
+            ],
+            series: [
+               {
+                  name: 'mutation',
+                  type: 'scatter',
+                  itemStyle: itemStyle,
+                  data: data.map(function(item, index) {
+                     return [item[0], item[1], item[2], item[3]];
+                  }),
+                  symbolSize: function(val) {
+                     return val[1] * 10;
+                  },
+                  encode: {
+                     x: 'Mut',
+                     y: 'RMSD',
+                     tooltip: [0, 1, 2, 3]
+                  }
+               }
+            ]
+         };
+
+         if (option && typeof option === 'object') {
+            myChart.setOption(option);
+         }
+      }
+
+      mutpopright('popContainer-right-1', myData2, max);
+   </script>
+</body>
+</html>

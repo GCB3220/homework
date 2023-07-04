@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Protein Viewer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="https://unpkg.com/protael@1.0.0/build/protael.min.js"></script>
+</head>
+<body>
+    <div id="proteinViewer"></div>
+    <script>
+        var viewer = new Protael.Viewer({
+            container: 'proteinViewer',
+            width: '100%',
+            height: '400px',
+            autoResize: true
+        });
+
+        // Load the PDB file
+        var pdbUrl = 'C:/a/y-code/python1/file/1h00.pdb';
+        viewer.loadPDB(pdbUrl);
+    </script>
+</body>
+</html>
