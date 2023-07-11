@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+    <style>
+        #app {
+            position: absolute;
+            left: 100px;
+            top: 100px;
+            width: 800px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <link rel="stylesheet" type="text/css" href="node_modules/molstar/build/viewer/molstar.css" />
+    <script type="text/javascript" src="node_modules/molstar/build/viewer/molstar.js"></script>
+    
+    <div id="app"></div>
+    
+    <script type="text/javascript">
+        molstar.Viewer.create('app', {
+            layoutIsExpanded: false,
+            layoutShowControls: true,
+            layoutShowRemoteState: false,
+            layoutShowSequence: true,
+            layoutShowLog: false,
+            layoutShowLeftPanel: true,
+    
+            viewportShowExpand: true,
+            viewportShowSelectionMode: true,
+            viewportShowAnimation: false,
+    
+            pdbProvider: 'rcsb',
+            emdbProvider: 'rcsb',
+        }).then(viewer => {
+          viewer.loadPdb('7bv2');
+          viewer.loadEmdb('EMD-30210', { detail: 6 });
+        });
+    </script>
+</body>
+</html>

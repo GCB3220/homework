@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+    <style>
+        #app {
+            position: absolute;
+            left: 100px;
+            top: 100px;
+            width: 800px;
+            height: 600px;
+        }
+        #controls {
+                position: absolute;
+                left: 8px;
+                top: 8px;
+                width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <link rel="stylesheet" type="text/css" href="node_modules/molstar/build/viewer/molstar.css" />
+    <script type="text/javascript" src="node_modules/molstar/build/viewer/molstar.js"></script>
+    
+    <div id="app"></div>
+    <div id='controls'></div>
+    
+    <script type="text/javascript">
+      molstar.Viewer.create('app', {
+          layoutIsExpanded: false,
+          layoutShowControls: true,
+          layoutShowRemoteState: false,
+          layoutShowSequence: false,
+          layoutShowLog: false,
+          layoutShowLeftPanel: true, 
+
+          collapseLeftPanel: true,//展示单边任务栏
+  
+          viewportShowExpand: true,
+          viewportShowSelectionMode: true, //可以选择链
+          viewportShowAnimation: false,
+
+          pdbProvider: 'rcsb',
+      }).then(viewer => {
+        viewer.loadPdb('1h00');
+        viewer.loadPdb('1h02')
+      });
+  </script>
+</html>

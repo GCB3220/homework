@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>title</title>
+</head>
+<body>
+  <link rel="stylesheet" href="node_modules/litemol/dist/css/LiteMol-plugin.css" type="text/css" />
+  <script src="node_modules/litemol/dist/js/LiteMol-plugin.js"></script>
+  <div id="litemol" style="width: 640px; height: 480px; margin-top: 200px; position: relative"></div>
+  <script>
+    var plugin = LiteMol.Plugin.create({ target: '#litemol' });
+    plugin.loadMolecule({
+      id: '1h00',
+      url: 'https://www.ebi.ac.uk/pdbe/entry-files/download/pdb1h00.ent',
+      format: 'pdb'
+    });
+    plugin.loadMolecule({
+      id: '1h02',
+      url: 'https://www.ebi.ac.uk/pdbe/entry-files/download/pdb1h02.ent',
+      format: 'pdb'
+    });
+  </script>
+</body>
+</html>
