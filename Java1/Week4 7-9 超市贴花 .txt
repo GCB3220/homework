@@ -1,0 +1,25 @@
+import java.util.Arrays;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args){
+        Scanner scanner = new Scanner(System.in);
+        // 输入礼品数及编号
+        int num = scanner.nextInt();
+        int[] id = new int[num];
+        int whether = 0;
+        for (int i = 0; i < num; i++){
+            id[i] = scanner.nextInt();
+        }
+        // 连续3个数
+        Arrays.sort(id);
+        for (int i = 0; i < num - 2; i++) {
+            if (id[i] == id[i + 1] - 1 && id[i] == id[i + 2] - 2) {
+                whether++;
+                i += 2; // 跳过已经找到的三张贴花
+            }
+        }
+        System.out.print(whether);
+        scanner.close();
+    }
+}
