@@ -1,0 +1,44 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args){
+        Scanner scanner = new Scanner(System.in);
+        int studentNum = scanner.nextInt();
+        // 输入学号
+        int[] studentId = new int[studentNum];
+        for (int i = 0; i < studentNum; i++) studentId[i] = scanner.nextInt();
+
+        // 分两列
+        int line1Index; // 奇偶性判断
+        if (studentNum%2 == 0) {
+            line1Index = studentNum/2;
+        } else {
+            line1Index = studentNum/2+1;
+        }
+        int[] line1 = new int[line1Index];
+        int[] line2 = new int[studentNum/2];
+        for (int i = 0; i < studentNum; i++) {
+            if (i%2 == 0){
+                line1[i/2] = studentId[i];
+            } else {
+                line2[i/2] = studentId[i];
+            }
+        }
+        // 打印,记得换行
+        if (studentNum == 1){
+            System.out.println(studentId[0]);
+            System.out.println(); // 格式错误
+        } else {
+            for (int i = 0; i < line1Index; i++) {
+                System.out.print(line1[i]);
+                if (i < line1Index-1) System.out.print(" ");
+            }
+            System.out.println();
+            for (int i = 0; i < studentNum/2; i++) {
+                System.out.print(line2[i]);
+                if (i < studentNum/2-1) System.out.print(" ");
+            }
+        }
+        scanner.close();
+    }
+}
