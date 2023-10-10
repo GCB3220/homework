@@ -1,0 +1,19 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args){
+        Scanner scanner = new Scanner(System.in);
+        // 输入人数及学号
+        int studentNum = scanner.nextInt();
+        int[] studentId = new int[studentNum];
+
+        // 分组打印
+        for (int i = 0; i < studentNum; i++){
+            studentId[i] = scanner.nextInt();
+        }
+        for (int i = 0; i < studentNum/2; i++){
+            System.out.println(studentId[i]+" "+studentId[studentNum-1-i]);
+        }
+        scanner.close();
+    }
+}
