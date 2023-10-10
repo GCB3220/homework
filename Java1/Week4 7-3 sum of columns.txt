@@ -20,7 +20,7 @@ public class Main {
                 colSum[i] += tableCol[j][i];
             }
         }
-        System.out.println(colSum[0]+" "+colSum[1]+" "+colSum[2]);
+        System.out.println(colSum[0]+" "+colSum[1]+" "+colSum[2]+" ");
         scanner.close();
     }
 }
