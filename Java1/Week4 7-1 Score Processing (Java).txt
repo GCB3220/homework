@@ -1,0 +1,90 @@
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String inputLine;
+        Map<String, Student> studentMap = new TreeMap<>();
+        Set<String> courseSet = new TreeSet<>();
+
+        while (true) {
+            inputLine = scanner.nextLine();
+            if (inputLine.equals("END")) break;
+
+            String[] detailLine = inputLine.split(", ");
+            if (studentMap.get(detailLine[0]) == null) {
+                studentMap.put(detailLine[0], new Student(detailLine[0]));
+            }
+
+            if (detailLine.length == 2) {
+                studentMap.get(detailLine[0]).setName(detailLine[1]);
+            } else if (detailLine.length == 3) {
+                String courseName = detailLine[1];
+                double score = Double.parseDouble(detailLine[2]);
+                studentMap.get(detailLine[0]).setScore(courseName, score);
+                courseSet.add(courseName);
+            }
+        }
+
+        // Print the table header
+        System.out.print("student id, name, ");
+        for (String course : courseSet) {
+            System.out.print(course + ", ");
+        }
+        System.out.println("average");
+
+        // Print student data
+        for (String studentId : studentMap.keySet()) {
+            Student student = studentMap.get(studentId);
+            System.out.print(studentId + ", " + student.getName() + ", ");
+            double totalScore = 0;
+            int courseCount = 0;
+
+            for (String course : courseSet) {
+                Double score = student.getScore(course);
+                if (score != null) {
+                    System.out.print(String.format("%.1f, ", score));
+                    totalScore += score;
+                    courseCount++;
+                } else {
+                    System.out.print(", ");
+                }
+            }
+
+            if (courseCount > 0) {
+                double average = totalScore / courseCount;
+                System.out.println(String.format("%.1f", average));
+            } else {
+                System.out.println();
+            }
+        }
+
+        scanner.close();
+    }
+}
+
+class Student {
+    private String name;
+    private Map<String, Double> scores;
+
+    public Student(String studentId) {
+        this.scores = new HashMap<>();
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setScore(String course, double score) {
+        scores.put(course, score);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Double getScore(String course) {
+        return scores.get(course);
+    }
+}
+
