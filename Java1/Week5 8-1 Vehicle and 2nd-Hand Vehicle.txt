@@ -1,0 +1,99 @@
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        // 读取
+        System.out.println("input second hand vehicle's regNo: ");
+        String regNo1 = scanner.next();
+        System.out.println("input second hand vehicle's make: ");
+        String make1 = scanner.next();
+        System.out.println("input second hand vehicle's year of manufacture: ");
+        int yearOfManufacture1 = scanner.nextInt();
+        System.out.println("input second hand vehicle's value: ");
+        double value1 = scanner.nextDouble();
+        System.out.println("input second hand vehicle's owner number: ");
+        int numberOfOwner1 = scanner.nextInt();
+
+        // 例子
+        SecondHandVehicle vehicle1 = new SecondHandVehicle(regNo1, make1,
+                yearOfManufacture1, value1, numberOfOwner1);
+        // 所有方法展示
+        System.out.println("regNo: "+vehicle1.getRegNo());
+        System.out.println("make: "+vehicle1.getMake());
+        System.out.println("year of manufacture: "+vehicle1.getYearOfManufacture());
+        System.out.println("value: "+vehicle1.getValue());
+        System.out.println("number of owners: "+vehicle1.getNumberOfOwners());
+
+        System.out.println("is multiple owners?"+vehicle1.hasMultipleOwners());
+        System.out.println("input reset value: ");
+        vehicle1.setValue(scanner.nextInt());
+        System.out.println("new value: "+vehicle1.getValue());
+        System.out.println("input year now: ");
+        System.out.println("age: "+vehicle1.calculateAge(scanner.nextInt()));
+        scanner.close();
+    }
+}
+
+class Vehicle {
+    // 属性
+    private String regNo;
+    private String make;
+    private int yearOfManufacture;
+    private double value;
+
+    // 方法
+    // 构造器
+    public Vehicle(String regNo, String make, int yearOfManufacture,
+                   double value) {
+        this.regNo = regNo;
+        this.make = make;
+        this.yearOfManufacture = yearOfManufacture;
+        this.value = value;
+    }
+    // 访问器
+    public String getRegNo() {
+        return this.regNo;
+    }
+    public String getMake() {
+        return this.make;
+    }
+    public int getYearOfManufacture() {
+        return this.yearOfManufacture;
+    }
+    public double getValue() {
+        return this.value;
+    }
+    // 更改器
+    public void setValue(double value) {
+        this.value = value;
+    }
+    // 其他
+    public int calculateAge(int yearNow) {
+        return yearNow-this.yearOfManufacture;
+    }
+}
+
+
+class SecondHandVehicle extends Vehicle {
+    // 属性
+    private int numberOfOwners;
+
+    // 方法
+    // 构造器
+    public SecondHandVehicle(String regNo, String make, int yearOfManufacture,
+                             double value, int numberOfOwners) {
+        super(regNo, make, yearOfManufacture, value);
+        this.numberOfOwners = numberOfOwners;
+    }
+    // 访问器
+    public int getNumberOfOwners() {
+        return this.numberOfOwners;
+    }
+    // 其他
+    public boolean hasMultipleOwners() {
+        boolean judge;
+        judge = this.numberOfOwners > 1;
+        return judge;
+    }
+}
