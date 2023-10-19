@@ -5,10 +5,12 @@ sd_for_all <- c()
 for (sample_size in 5:100){
   mean_for_test <- c()
   sd_for_test <- 0
+  # 每个大小1000次实验
   for (i in 1:1000){
     sample_for_test <- sample(population, sample_size)
     mean_for_test <- c(mean_for_test, mean(sample_for_test))
   }
+  # 得出各个大小sd
   sd_for_test <- sd(mean_for_test)
   sd_for_all <- c(sd_for_all, sd_for_test)
 }
@@ -20,7 +22,8 @@ plot(5:100, sd_for_all)
 sample_for_die <- sample(1:6, 1000, replace = TRUE)
 remove(smaple_for_die)
 hist(sample_for_die, breaks = 0.5:6.5)
-sample_for_die <- sample(2:12, 1000, replace=TRUE)
+sample_for_die <- sample(1:6, 1000, replace=TRUE)+
+  sample(1:6, 100, replace=TRUE)
 hist(sample_for_die)
 
 
