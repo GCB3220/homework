@@ -4,17 +4,14 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         int input = scanner.nextInt();
-        String ouput = " is a prime number" ;
-        if (input <= 1) {
-            ouput = " is wrong number";
-        } else {
-            for (int i = 2; i < input; i++) {
-                if (input % i == 0) { // 有整除立即跳出
-                    ouput = " is not a prime number.";
-                    break;
-                }
+        String ouput = " is a prime number." ;
+        for (int i = 2; i < input; i++) {
+            if (input % i == 0) { // 有整除立即跳出
+                ouput = " is not a prime number.";
+                break;
             }
         }
+        if (input <= 1) ouput = " is not a prime number.";
         System.out.println(input+ouput);
     }
 }
