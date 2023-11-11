@@ -1,0 +1,48 @@
+import java.util.HashMap;
+import java.util.Map;
+
+class Room {
+    // 房间种类
+    private String roomName;
+    // 出口表
+    private Map<String, Room> exitsAvailable;
+
+    // 构造房间类型
+    public Room(String name){
+        roomName = name;
+        exitsAvailable = new HashMap<>();
+    }
+
+    // 形成出口
+    public void addExit(String direction, Room name){
+        exitsAvailable.put(direction, name);
+    }
+    public void addExit(Room north, Room south, Room west, Room east){
+        if (north != null) {
+            exitsAvailable.put("north", north);}
+        if (south != null) {
+            exitsAvailable.put("south", south);}
+        if (west != null) {
+            exitsAvailable.put("west", west);}
+        if (east != null) {
+            exitsAvailable.put("east", east);}
+    }
+
+    // 离开房间所需方法
+    public boolean checkExit(String direction){
+        return exitsAvailable.containsKey(direction);
+    }
+    public Room getExitRoom(String direction){
+        return exitsAvailable.get(direction);
+    }
+
+    // 打印信息
+    @Override
+    public String toString(){
+        StringBuilder output = new StringBuilder();
+        for (String key : exitsAvailable.keySet()){
+            output.append(key).append(", ");
+        }
+        return "Position: "+roomName+"\n"+"Available exits: "+output;
+    }
+}

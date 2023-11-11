@@ -1,0 +1,130 @@
+import java.util.Scanner;
+import java.util.Random;
+
+// 游戏运行
+public class Adventure {
+    public static void main(String[] args) {
+        Adventure game = new Adventure();
+        game.startGame();
+        Scanner scanner = new Scanner(System.in);
+        while (!game.isGameOver){
+            String nextStep = scanner.nextLine();
+            game.dealCommand(nextStep);
+        }
+        System.out.println(game.getState());
+    }
+
+    // 以下为游戏操作相关
+    // 游戏是否继续?
+    boolean isGameOver;
+    // 房间表
+    private Room[] roomList;
+    // 现在位置
+    private Room currentPosition;
+    private Room princessRoom;
+    private Room monsterRoom;
+    private String state;
+
+    // 构造器:游戏开始
+    public Adventure(){
+        isGameOver = false;
+        generateRoomList();
+        generateSpecialRoom();
+        currentPosition = roomList[0];
+        state = "GoodBye";
+    }
+
+    // 游戏提示
+    public void startGame(){
+        System.out.println("Game starts!");
+        System.out.println("If need any help, please type: \"help\" ");
+        System.out.println("Current position: outside");
+        System.out.println("Available exit: east");
+    }
+    // 处理游戏指令
+    public void dealCommand(String steps){
+        switch (steps) {
+            case "help" -> commandHelp();
+            case "bye" -> commandBye();
+            case "check" -> commandCheck();
+            default -> {
+                // go以及错误输入
+                String[] GoDirection = steps.split(" ");
+                if (GoDirection.length == 2 && GoDirection[0].equals("go")) {
+                    commandGo(GoDirection[1]);
+                } else {
+                    System.out.println("Command not found");
+                    commandHelp();
+                }
+            }
+        }
+    }
+    private void commandHelp(){
+        System.out.println("Available commands: go, bye, help, check");
+        System.out.println("Command \"go\" need to add direction, like: go east");
+    }
+    private void commandBye(){
+        System.out.println("Quit Game");
+        System.out.println(state);
+        isGameOver = true;
+    }
+    private void commandCheck(){
+        System.out.println(currentPosition.toString());
+    }
+    private void commandGo(String direction){
+        if (currentPosition.checkExit(direction)){
+            currentPosition = currentPosition.getExitRoom(direction);
+            System.out.println("You enter a new room.");
+            System.out.println(currentPosition.toString());
+        } else {
+            System.out.println("Exit not available");
+        }
+        checkGame();
+    }
+
+    // 生成房间
+    private void generateRoomList(){
+        // 生成所有房间
+        Room outside = new Room("outside");
+        Room pub = new Room("pub");
+        Room storage = new Room("storage");
+        Room lobby = new Room("lobby");
+        Room bedroom = new Room("bedroom");
+        Room study = new Room("study");
+        // 设置出口
+        outside.addExit("east", lobby);
+        lobby.addExit(storage, pub, outside, study);
+        pub.addExit("north", lobby);
+        storage.addExit("south", lobby);
+        study.addExit(null, null, lobby, bedroom);
+        bedroom.addExit("west", study);
+        roomList = new Room[]{outside, lobby, storage, pub, bedroom, study};
+    }
+    // 生成随机公主房和怪物房(不重叠)
+    private void generateSpecialRoom(){
+        Random random = new Random();
+        int num1 = random.nextInt(roomList.length-2)+2;
+        int num2 = random.nextInt(roomList.length-2)+2;
+        princessRoom = roomList[num1];
+        monsterRoom = roomList[num2];
+    }
+
+    // 游戏是否结束
+    private void checkGame(){
+        if (currentPosition == monsterRoom){
+            isGameOver = true;
+            state = "You find a monster.\nYou are killed.";
+        } else if (currentPosition == princessRoom
+                && state.equals("You find the princess.")) {
+            isGameOver = true;
+            state = "You take the princess out of the castle.";
+        } else if (currentPosition == princessRoom
+                && state.equals("Goodbye")){
+            state = "You find the princess.\nYou need to take her out.";
+        }
+    }
+    // 打印结果
+    public String getState(){
+        return state;
+    }
+}
