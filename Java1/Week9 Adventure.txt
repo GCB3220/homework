@@ -21,9 +21,15 @@ public class Adventure {
     private Room[] roomList;
     // 现在位置
     private Room currentPosition;
+    // 公主怪物房
     private Room princessRoom;
     private Room monsterRoom;
-    private String state;
+    // 玩家状态
+    private int currentState;
+    private String[] states = new String[]{"GoodBye",
+            "You find the princess\nYou need to take her out",
+            "You find a monster\nYOU ARE KILLED!",
+            "You successfully take the princess out!\nYou win"};
 
     // 构造器:游戏开始
     public Adventure(){
@@ -31,7 +37,7 @@ public class Adventure {
         generateRoomList();
         generateSpecialRoom();
         currentPosition = roomList[0];
-        state = "GoodBye";
+        currentState = 0;
     }
 
     // 游戏提示
@@ -65,11 +71,11 @@ public class Adventure {
     }
     private void commandBye(){
         System.out.println("Quit Game");
-        System.out.println(state);
         isGameOver = true;
     }
     private void commandCheck(){
         System.out.println(currentPosition.toString());
+        if (currentState != 0) System.out.println(states[currentState]);
     }
     private void commandGo(String direction){
         if (currentPosition.checkExit(direction)){
@@ -87,44 +93,49 @@ public class Adventure {
         // 生成所有房间
         Room outside = new Room("outside");
         Room pub = new Room("pub");
-        Room storage = new Room("storage");
+        Room store = new Room("store");
         Room lobby = new Room("lobby");
         Room bedroom = new Room("bedroom");
         Room study = new Room("study");
         // 设置出口
         outside.addExit("east", lobby);
-        lobby.addExit(storage, pub, outside, study);
+        lobby.addExit(store, pub, outside, bedroom);
         pub.addExit("north", lobby);
-        storage.addExit("south", lobby);
-        study.addExit(null, null, lobby, bedroom);
-        bedroom.addExit("west", study);
-        roomList = new Room[]{outside, lobby, storage, pub, bedroom, study};
+        store.addExit(null, lobby, null, study);
+        study.addExit(null, bedroom, store, null);
+        bedroom.addExit(study, null, lobby, null);
+        roomList = new Room[]{outside, lobby, store, pub, bedroom, study};
     }
     // 生成随机公主房和怪物房(不重叠)
     private void generateSpecialRoom(){
         Random random = new Random();
         int num1 = random.nextInt(roomList.length-2)+2;
-        int num2 = random.nextInt(roomList.length-2)+2;
+        int num2;
+        do {
+            num2 = random.nextInt(roomList.length-2)+2;
+        } while (num2 == num1);
         princessRoom = roomList[num1];
         monsterRoom = roomList[num2];
+        System.out.println(num1+" "+num2);
     }
 
     // 游戏是否结束
     private void checkGame(){
-        if (currentPosition == monsterRoom){
+        if (currentPosition == monsterRoom){ // 怪物房
             isGameOver = true;
-            state = "You find a monster.\nYou are killed.";
-        } else if (currentPosition == princessRoom
-                && state.equals("You find the princess.")) {
+            currentState = 2;
+        } else if (currentPosition == roomList[0] && currentState == 1) {
+            // 带出公主
             isGameOver = true;
-            state = "You take the princess out of the castle.";
-        } else if (currentPosition == princessRoom
-                && state.equals("Goodbye")){
-            state = "You find the princess.\nYou need to take her out.";
+            currentState = 3;
+        } else if (currentPosition == princessRoom && currentState == 0){
+            // 找到公主
+            currentState = 1;
+            System.out.println(states[currentState]);
         }
     }
     // 打印结果
     public String getState(){
-        return state;
+        return states[currentState];
     }
 }
