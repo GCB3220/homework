@@ -1,0 +1,63 @@
+---
+title: "Mouse report"
+author: "Dmytro Shytikov (Adapted from MI Stefan)"
+date: "Semester 1, 2023/24"
+output: 
+  pdf_document: default
+
+# You can further customize the pdf_document. Do not forget to add some indentation in the YAML header!
+---
+
+<!-- In the header above, you can further customize your document. We prefer the use of LaTeX, thus it would be better if you use pdf_document by default. You can find more information about the use of the YAML header here: https://bookdown.org/yihui/rmarkdown-cookbook/rmarkdown-anatomy.html -->
+
+```{r setup, include=FALSE}
+# `include=FALSE` means that this chunk will be executed, the results of this code will affect this R session, but the output will not be stored.
+knitr::opts_chunk$set(echo = F) # You can set the default option for the code chunks by changing `opts_chunk`. Here, we set the `echo` attribute for all the following chunks to FALSE by default.
+
+# Keep in mind that normally we are interested in the code you use to prepare your final document!
+
+library(tidyverse)
+library(knitr)
+
+# Also, remember: do not use comments within the code chunks too much.
+# And do not make them too long. This code chunk is an exception. 
+# The results of this chunk will not be exported further.
+```
+
+<!-- You can find more information about different code chunk options here: https://yihui.org/knitr/options/ -->
+
+# Introduction
+
+This is the monthly mouse report, based on data collected by the lab assistant, Dr. Lu.
+
+```{r}
+mouse_report <- read.csv("mouse_report.csv") %>% 
+  mutate(genotype = as.factor(genotype))
+```
+
+# Overall statistics 
+
+Total number of mice: `r nrow(mouse_report)` animals. Their distribution according to the genotype is:
+
+```{r}
+table(mouse_report$genotype) %>% kable(col.names = c("Genotype", "Number"))
+```
+
+The distribution of age and weight of mice is shown in figure 1.
+
+```{r, fig.ncol=2, out.width="50%"}
+geno <- ggplot(data = mouse_report, aes(x = genotype, y = weight, col = genotype)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1) +
+  theme_classic()
+age <- ggplot(data = mouse_report, aes(x = genotype, y = age, col = genotype)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1) +
+  theme_classic()
+print(geno)
+print(age)
+```
+
+<!-- For instance, it may be reasonable to set several figures along each other. One way is too use the `cowplot` package. A simper way is to just position two figures near to each other by specifying the number of columns (`ncol`) and the figure width. More code chunk options can be found here: https://yihui.org/knitr/options/ -->
+
+<!-- We do not expect you will have that much time to make very sophisticated code for your in-class individual ICAs, but it will improve your mark. And it is good to know different options! -->
