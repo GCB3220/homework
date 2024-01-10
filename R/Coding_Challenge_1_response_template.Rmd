@@ -1,0 +1,52 @@
+---
+title: "ADS2 Coding Challenge 1"
+author: "Your role number here"
+date: "10th January 2024 1400-1700hrs"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Benefits of swimming for long-distance runners
+
+## What would be a suitable statistical test for these data and why? Note you may need to tidy these data before deciding on which test to use. 
+
+## What are your null and alternative hypotheses?
+
+## Is there a statistically significant improvement on runners' times after swimming? 
+
+\newpage
+
+
+
+# 2. Number of emergency room admissions
+
+## Import the dataset and plot the data in a useful way.
+
+## Is there a difference in patient admission rates between Mondays and Sundays?
+
+## Based on your findings, what advice would you give Dr. Horsey?
+
+\newpage
+
+
+
+# 3. Spinal cord injury and novel biomaterials
+
+## Import, arrange the data (merge both pieces of data and make the data possible to analyse), and make it suitable for analysis, e.g. the values. You should perform all the manipulations in R and provide the code.
+
+## Check your data carefully. Identify features of the data and discuss your conclusions. Make illustrative plots.
+
+## Formulate the correct statistical hypothesis to compare the groups, choose the appropriate statistical test, and check assumptions for this test. Explain your choice briefly. Then, perform this test and identify whether the difference between the experimental groups is statistically significant.
+
+## Discuss the results you got. What did you obtain? Are there any flaws in the experimental design and what would you suggest to your colleagues? Support your statements with the appropriate statistics and/or effect size estimates.
+
+
+
+

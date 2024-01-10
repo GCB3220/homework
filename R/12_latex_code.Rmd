@@ -1,0 +1,135 @@
+---
+title: "week12"
+author: "GCB"
+date: "2023-12-07"
+output: 
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r, setup, eval=FALSE, echo=T}
+# include = false:该代码区结果不显示
+library(knitr)
+library(tidyverse)
+knitr::opts_chunk$set(eval=TRUE, #在块中运行代码(default = TRUE)
+                      highlight = T, #高亮显示
+                      echo = T, #是否在输出中包含源代码
+                      tidy=TRUE,#是否整理代码
+                      error = T, #是否在输出中包含错误信息
+                      warning = F, #是否在输出中包含警告(default = TRUE)
+                      message  = F, #是否在输出中包含参考的信息
+                      cache=F)
+knitr::opts_knit$set(root.dir = "C:/a/y-code/R1")
+getwd()
+```
+
+# 1. section headline
+
+2.  **bold text**
+
+3.  [Link Text](https://www.runoob.com/)
+
+-a -b -c -d -e
+
+test: I am the *best* student - Prepare tutorial - Go to class - Revise lecture - Finish ICA report 1. Eat breakfast 2. Eat lunch 4. Eat dinner 2. Sleep
+
+code:
+
+```{r}
+x=2
+y=3
+x+y
+```
+
+no result
+
+```{r eval=FALSE}
+2+2
+```
+
+only result
+
+```{r echo=FALSE}
+2+2
+```
+
+```{r}
+hist(rnorm(10000), col = 'tomato')
+```
+
+```{r}
+x
+```
+
+```{r}
+dragons <- read.csv("dragons.csv")
+head(dragons)
+```
+
+```{r}
+library(knitr)
+kable(summary(dragons))
+```
+
+```{r}
+mice <- read.csv("C:/a/y-code/R1/mouse_report.csv")
+kable(mice[1:6,c(2,4,5)])
+```
+
+![Figure legend](C:\a\y-code\R1\Bridge.png)
+
+```{r chunk-name, out.width='100%', fig.align='center', fig.caption='The description of the figure.'}
+include_graphics(path = 'Bridge.png')
+```
+
+## Problem note: Mouse report
+
+### Overview
+
+This report provides a brief overview of the health status of mice in Prof. Xu's lab.
+
+### Date: July 2019
+
+### Summary Statistics:
+
+Overall Weight and Age
+
+```{r, eval=FALSE, echo=F}
+library(tidyverse)
+```
+
+```{r summary-stats, echo=FALSE}
+# Load necessary libraries and read the data
+
+mouse_data <- read.csv("mouse_report.csv")
+
+# Calculate summary statistics
+overall_weight_summary <- summary(mouse_data$weight)
+overall_age_summary <- summary(mouse_data$age)
+
+# Display summary statistics
+cat("Overall Weight Summary:\n", overall_weight_summary, "\n\n")
+cat("Overall Age Summary:\n", overall_age_summary, "\n")
+```
+
+## Boxplots of Weight and Age by Genotype
+
+```{r, echo=FALSE}
+# Create boxplots
+par(mfrow=c(1,2))
+boxplot(weight ~ genotype, data=mouse_data, main="Mouse Weight by Genotype", xlab="Genotype", ylab="Weight (g)")
+boxplot(age ~ genotype, data=mouse_data, main="Mouse Age by Genotype", xlab="Genotype", ylab="Age (weeks)")
+
+```
+
+## LaTeX
+
+1.  \( LaTeX stuff \)
+2.  \( \textbf{some text} \) --bold face 
+3.  \(\frac{1}{2}\) --1/2 
+4.  \( A = \frac{d^2 \pi}{4} \)
+5.  \(E = mc^2\)
+6.  \(K_d = \frac{k_b}{k_f}\)
+7.  \(v = v_{\text{max}} \frac{[S]}{K_M + [S]}\)
+8.  \(\sigma = \sqrt{\text{var}}\)
+9.  \(\mu = \frac{1}{n} \sum_{k=1}^{n} x_k\)

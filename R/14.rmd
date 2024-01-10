@@ -1,0 +1,106 @@
+---
+title: "ADS2 Coding Challenge 1 - Mock paper"
+author: ""
+date: "`r format(Sys.time(), '%c')`" 
+output: 
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      tidy = T,
+                      tidy.opts = list(width.cutoff = 60),
+                      fig.width = 10, 
+                      fig.height = 5,
+                      cache = T)
+```
+
+# 1. Stroop test
+
+## Import the data and plot them in a useful way.
+
+```{r}
+strp_test <- read.csv("stroop_test.csv")
+library(ggplot2)
+strp_plot <- ggplot(data = strp_test, 
+                    mapping = aes(x = Time, y = Score, group = Time))
+strp_plot + geom_boxplot(aes(fill = Time)) 
+```
+
+## Is there a difference in performance on the Stroop task between the morning and afternoon group?
+
+```{r}
+mean(strp_test$Score)
+strp_morning <- subset(strp_test, Time == "Morning")
+mean(strp_morning$Score)
+strp_afternoon <- subset(strp_test, Time == "Afternoon")
+mean(strp_afternoon$Score)
+```
+
+```{r}
+t.test(sample(strp_morning$Score, 10), 
+       sample(strp_afternoon$Score, 10))
+```
+
+## Name one way in which the study could be improved or followed up on.
+
+more participants?
+
+\newpage
+
+# 2. Marathon finishing times
+
+## Import the dataset, and plot it in a way that addresses the question we are interested in.
+
+```{r}
+mrt_time <- read.csv("Chicago2013_random_finishers.csv")
+mrt_plot <- ggplot(data = mrt_time)
+mrt_plot + geom_boxplot(aes(x = Gender, y = Time))
+```
+
+```{r}
+mrt_plot + geom_col(aes(x = Age, y = Time, fill = Gender))
+```
+
+```{r}
+q <- ggplot(mrt_time, aes(x=Age,y=Time, col=Gender))
+q <- q+xlab("Age") + ylab("Time [hours]")
+q <- q + geom_point(size = 3)
+q
+```
+
+## What are the average finishing times and standard deviation for each gender? What are the average finishing times and standard deviation for each age quartile?
+
+```{r}
+mrt_M <- subset(mrt_time, Gender == "M")
+mean(mrt_M$Time)
+sd(mrt_M$Time)
+mrt_F <- subset(mrt_time, Gender == "F")
+mean(mrt_F$Time)
+sd((mrt_F$Time))
+```
+
+## If you had to suggest a statistical test to determine the effect of age quartile and gender on marathon finishing time, what test would you suggest, and why?
+
+```{r}
+```
+
+\newpage
+
+# 3. Antiviral drug
+
+## What are the Null Hypothesis and the Alternative Hypothesis in Prof. Liu's trial?
+
+1.  Null: no differences in the recovery time between two group of mouses. $H_0$
+2.  Alternative: the recovery time of two group of mouses is different.
+
+## For her statistical analysis, Prof. Liu uses the commonly used significance level $\alpha$ of $0.05$. What type of error does this relate to, and how?
+
+1.  This related to type I error
+2.  Type I error means rejecting null hypothesis when it is true. The significance level $\alpha$ of $0.05$ means that when rejecting the null hypothesis, there is still 5% probability that null hypothesis is true.
+
+## After ensuring that the sample size is big enough and that the assumptions of the statistical tests are met, Prof. Liu runs a statistical test and gets a p-value of $0.059$. What is a p-value? Based on this result, what should Prof. Liu report as the outcome of this study?
+
+1.  P-value is the probability of obtaining results at least as extreme as the observed results of a statistical hypothesis test.
+2.  P-value = 0.059 \> 0.05 means there is no difference(null hypothesis).

@@ -1,0 +1,43 @@
+---
+title: "ADS2 Coding Challenge 1 - Mock paper"
+author: ""
+date: "`r format(Sys.time(), '%c')`" 
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Stroop test
+
+
+## Import the data and plot them in a useful way.
+
+## Is there a difference in performance on the Stroop task between the morning and afternoon group? 
+
+## Name one way in which the study could be improved or followed up on.
+
+\newpage
+
+
+# 2. Marathon finishing times
+
+
+## Import the dataset, and plot it in a way that addresses the question we are interested in. 
+
+## What are the average finishing times and standard deviation for each gender? What are the average finishing times and standard deviation for each age quartile? 
+
+## If you had to suggest a statistical test to determine the effect of age quartile and gender on marathon finishing time, what test would you suggest, and why? 
+
+\newpage
+
+# 3. Antiviral drug
+
+
+## What are the Null Hypothesis and the Alternative Hypothesis in Prof. Liu's trial?
+
+## For her statistical analysis, Prof. Liu uses the commonly used significance level $\alpha$ of $0.05$. What type of error does this relate to, and how? 
+
+## After ensuring that the sample size is big enough and that the assumptions of the statistical tests are met, Prof. Liu runs a statistical test and gets a p-value of $0.059$. What is a p-value? Based on this result, what should Prof. Liu report as the outcome of this study? 
+

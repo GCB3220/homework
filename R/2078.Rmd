@@ -1,0 +1,166 @@
+---
+title: "ADS2 Coding Challenge 1"
+author: "2078"
+date: "10th January 2024 1400-1700hrs"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      tidy = T,
+                      tidy.opts = list(width.cutoff = 60),
+                      fig.width = 10, 
+                      fig.height = 5,
+                      cache = T)
+library(tidyverse)
+```
+
+# 1. Benefits of swimming for long-distance runners
+
+## What would be a suitable statistical test for these data and why? Note you may need to tidy these data before deciding on which test to use. 
+```{r, eval = F}
+swim <- read.table("swimming.txt", sep = "\t", header = T)
+```
+```{r}
+swim$before_minutes <- swim$before_minutes + round(swim$before_seconds/60, 2)
+swim$after_minutes <- swim$after_minutes + round(swim$after_minutes/60, 2)
+swim <- swim[, c(1, 2, 4)]
+head(swim)
+```
+
+## What are your null and alternative hypotheses?
+\(H_0\): Half marathon time for runners after swimming is no less than before             swimming. 
+\(H_A\): Half marathon time for runners after swimming is less than before                swimming. 
+
+## Is there a statistically significant improvement on runners' times after swimming? 
+```{r}
+shapiro.test(swim$after_minutes-swim$before_minutes)
+```
+So use paired t-test
+```{r}
+t.test(swim$after_minutes, swim$before_minutes, alternative = "less", 
+       paired = T)
+```
+The result does not reject \(H_0\) shows there is no significant difference.
+
+\newpage
+
+
+
+# 2. Number of emergency room admissions
+
+## Import the dataset and plot the data in a useful way.
+1. import and view the data
+```{r}
+hospital <- read.csv("hospital_admissions.csv")
+head(hospital, 15)
+```
+2. Arrange the data
+```{r}
+patients_total <- c()
+week <- c()
+for (i in 1:52){
+  week_n <- subset(hospital, week == i & weekday == "Monday")
+  week <- c(week, "Monday")
+  patients_total <- c(patients_total, round(sum(week_n$patients_per_hour)/8, 2))
+  week_n <- subset(hospital, week == i & weekday == "Sunday")
+  week <- c(week, "Sunday")
+  patients_total <- c(patients_total, round(sum(week_n$patients_per_hour)/8, 2))
+}
+
+hospital_new <- data.frame(
+  week = 1:52,
+  weekday = week,
+  patients_per_hour = patients_total
+)
+
+```
+3. Plot(use ggplot2)
+```{r}
+library(ggplot2)
+h_plot <- ggplot(hospital_new, mapping = aes(x = week, y = patients_per_hour))
+h_plot <- h_plot + geom_col(aes(fill = weekday))
+h_plot
+```
+
+## Is there a difference in patient admission rates between Mondays and Sundays?
+1. use statistical test :
+\(H_0\): patient admission rates in Mondays is not greater than it in Sundays.
+\(H_A\): patient admission rates in Mondays is greater than it in Sundays.
+```{r}
+hospital_Mon <- subset(hospital_new, weekday == "Monday")
+hospital_Sun <- subset(hospital_new, weekday == "Sunday")
+shapiro.test(hospital_Mon$patients)
+shapiro.test(hospital_Sun$patients)
+```
+2. Because shapiro.test for hospital_Mon shows p<0.05, use Mann-Whitney test
+```{r}
+wilcox.test(hospital_Mon$patients, hospital_Sun$patients, pair = F, 
+            alternative = "greater")
+```
+It tends to reject \(H_0\). It has difference.
+
+## Based on your findings, what advice would you give Dr. Horsey?
+I suggest Dr. Horsey arrange the more manpower on weekdays than weekends, because the test shows there is significant difference in patient admission rates in  Mondays comparing to Sundays
+
+\newpage
+
+
+
+# 3. Spinal cord injury and novel biomaterials
+
+## Import, arrange the data (merge both pieces of data and make the data possible to analyse), and make it suitable for analysis, e.g. the values. You should perform all the manipulations in R and provide the code.
+```{r}
+sci_before <- read.csv("SCI_before.csv")
+sci_after <- read.csv("SCI_after.csv")
+sci <- merge(sci_before, sci_after, by = "patient_ID")
+sci[sci == "A"] <- 5
+sci[sci == "B"] <- 4
+sci[sci == "C"] <- 3
+sci[sci == "D"] <- 2
+sci[sci == "E"] <- 1
+sci$AIS_before <- as.numeric(sci$AIS_before)
+sci$AIS_after <- as.numeric(sci$AIS_after)
+sci <- unique(sci)
+summary(sci)
+
+```
+
+## Check your data carefully. Identify features of the data and discuss your conclusions. Make illustrative plots.
+1. Identify features of the data
+```{r}
+summary(sci)
+```
+2. plot
+```{r}
+sci_plot <- pivot_longer(sci, cols = c(AIS_before, AIS_after),
+                         names_to = "situation", 
+                         values_to = "disease_level")
+s_plot <- ggplot(sci_plot, mapping = aes(x = disease_level))
+s_plot + geom_bar(aes(fill = situation), position = "Stack")
+```
+
+## Formulate the correct statistical hypothesis to compare the groups, choose the appropriate statistical test, and check assumptions for this test. Explain your choice briefly. Then, perform this test and identify whether the difference between the experimental groups is statistically significant.
+\(H_0\): Compared to before, there is no decrease in patient's disease level after new treatment 
+\(H_A\): Compared to before, there is a decrease in patient's disease level after new treatment
+
+Because the data is not continuous, so I use rank test
+```{r}
+wilcox.test(sci$AIS_after, sci$AIS_before, pair = T, alternative = "greater")
+```
+The result does not reject \(H_0\), it shows there no difference
+
+## Discuss the results you got. What did you obtain? Are there any flaws in the experimental design and what would you suggest to your colleagues? Support your statements with the appropriate statistics and/or effect size estimates.
+
+1. I obtain the new treatment did not show significant influence on patients. The p value > 0.05
+2. I think the experiment should includes more patients.The sample error is large. 
+```{r}
+sd(sci$AIS_before-sci$AIS_after)/sqrt(30)
+```
+
+
+
