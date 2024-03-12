@@ -114,7 +114,7 @@ pheatmap::pheatmap(sampleDistMatrix,
                    col = colors)
 plotPCA(vsd) + theme_bw()
 
-# 数据预过滤
+# 数据预过滤+padj
 dim(counts(dds))
 keep <- rowSums(counts(dds)) >= 10
 dds <- dds[keep, ]
