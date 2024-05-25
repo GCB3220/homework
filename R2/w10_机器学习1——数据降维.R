@@ -130,3 +130,28 @@ for (i in 1:10)
 { plot(fstats[i,], ylab = "Value", xlab = "Feature index")
   title(paste("Feature values for digit", toString(i-1)))
 }
+
+
+
+
+
+
+
+
+
+# task2
+library(nnet)
+rows <- sample(1:1000, 700)
+train_labels <- features[rows, 1]
+valid_labels <- features[-rows, 1]
+train_data <- features[rows, -1]
+valid_data <- features[-rows, -1]
+
+train_labels_matrix = class.ind(train_labels)
+nn = nnet(train_data, train_labels_matrix, size = 4, softmax = TRUE)
+
+pred_train = predict(nn, train_data, type="class")
+pred_valid = predict(nn, valid_data, type="class")
+
+mean(pred_train == train_labels)
+mean(pred_valid == valid_labels)
