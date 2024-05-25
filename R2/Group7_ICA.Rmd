@@ -1,0 +1,528 @@
+---
+title: Group7 ICA
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: true
+geometry: margin=0.6in
+fontsize: 10pt
+header-includes:
+  - \usepackage{listings}
+  - \lstset{basicstyle=\tiny\ttfamily}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy = TRUE, tidy.opts = list(width.cutoff=60))
+```
+
+```{r,message=FALSE,warning = FALSE,include=FALSE}
+library(tidyverse)
+library(purrr)
+library(multcomp)
+library(ggstatsplot)
+library(egg)
+```
+## Question 1 Background
+Nowadays, drug and alcohol addiction remains to be a significant public health challenge globally. Excessive alcohol consumption can lead to multiple physical and mental health problems. Meanwhile, opioid addiction has become a growing concern in recent decades.
+
+To better understand the scope and trends of opioid and alcohol related disorders, we have analysed the data from Global Health Data Exchange, providing estimates of deaths and disease prevalence related to alcohol and opioid cause across different regions, age groups, and sexes over time. The timeline covers period from 1990 to 2019, and seven regions defined by the World Bank are included.
+
+## Preprocess 
+Before diving into the dataset, it is essential to check the data and perform critical preprocessing steps to ensure the dataset is clean, including checking for missing values, duplicated rows, and any typo.
+
+```{r}
+health_df<-read.csv("substance_use.csv")
+head(health_df,2)
+```
+
+```{r,eval=FALSE}
+any(is.na(health_df))
+any(duplicated(health_df))
+```
+It is reported that there is no missing value and duplicated row. After checking, there is no any typo as well. Therefore, this dataset has already cleaned and is ready for further analysis. 
+
+## Question 1.1: In 2019, what region of the world has the highest rate of alcohol-related deaths among men aged 40-44? 
+
+```{r}
+q1.1_region_research_df <- health_df %>%
+  filter(measure=="Deaths",
+         age=="40 to 44",
+         cause=="Alcohol use disorders",
+         year==1990,
+         sex=="Male")
+q1.1_max_location <- q1.1_region_research_df[q1.1_region_research_df$val == 
+                                      max(q1.1_region_research_df$val), ]$location
+print(q1.1_max_location)
+```
+
+The result shows that Europe and Central Asia region has the highest rate of alcohol-related deaths among men aged 40-44 in 2019. 
+
+
+## Question 1.2:  Looking at the prevalence of alcohol-related disease in the East Asia and Pacific region, how has this changed over time and in the different age groups? Is there a difference between men and women?
+
+The first sub-question explores changes related to time and age, while the second sub-question explores changes related to gender.
+First we get the sub data contains the prevalence of alcohol-related disease in the East Asia and Pacific region.
+```{r}
+q1.2_prevalence_df<-health_df%>%
+  filter(measure=="Prevalence",
+         cause=="Alcohol use disorders",
+         location=="East Asia & Pacific - WB")
+head(q1.2_prevalence_df,3)
+```
+
+### Sub-question 1.2.1: how has this changed over time and in the different age groups?
+Now we should explain how prevalence change over the combined factors of time and age groups. We should get rid of other factors like gender, therefore to plot the trend lines, we calculate the average of the 'Female' and 'Male' values for each row, and stores the result in a new 'total_val' column.
+```{r,message=FALSE}
+q1.2.1_alcohol_disorders_east_asia_pacific <- health_df %>%
+  filter(location == 'East Asia & Pacific - WB', 
+         cause == 'Alcohol use disorders', 
+         measure == 'Prevalence')
+
+q1.2.1_alcohol_disorders_east_asia_pacific_summary <- q1.2.1_alcohol_disorders_east_asia_pacific %>%
+  group_by(location, year, age, sex) %>%
+  summarise(total_value = sum(val, na.rm = TRUE))
+
+q1.2.1_alcohol_disorders_east_asia_pacific_summary <- q1.2.1_alcohol_disorders_east_asia_pacific_summary %>%
+pivot_wider(names_from = sex, 
+              values_from = total_value)
+
+q1.2.1_alcohol_disorders_east_asia_pacific_summary$total_val <- (q1.2.1_alcohol_disorders_east_asia_pacific_summary$Female + q1.2.1_alcohol_disorders_east_asia_pacific_summary$Male)/2
+```
+To explain how the prevalence of alcohol use disorders changes over time and across age groups, we can create a dot line plot that shows the 'total_val' values on the y-axis and the 'year' and 'age' variables on the x-axis.
+```{r, message=FALSE,fig.width=6,fig.height=3,fig.align='center'}
+ggplot(q1.2.1_alcohol_disorders_east_asia_pacific_summary, aes(x = year, y = total_val, color = age)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    
+    title = "Prevalence of Alcohol-Related Disease Among Males in East Asia & Pacific by Age Group",
+    x = "Year",
+    y = "Average Prevalence",
+    color = "Age Group") +
+  theme_article()+
+  theme(legend.position = "right")+
+  theme(plot.title=element_text(size=7, hjust=0.5))
+```
+
+Each line represents an age group and shows the trend of alcohol-related disease prevalence within that group across the years. For all age groups, there is a general pattern of an initial increase in prevalence rates followed by a peak and a subsequent decline. However, the timing of the peaks varies across age groups. The youngest groups, ages 25 to 29 through 35 to 39, peak in prevalence rates around the early 2000s, after which the rates begin to decline. The middle age groups, 40 to 44 through 50 to 54, show a peak slightly later, closer to the mid-2000s. The older age groups, particularly 55 to 59 and above, tend to peak even later, around the late 2000s to early 2010s, before their rates start to decline. 
+
+Interestingly, the younger age groups also show higher overall prevalence rates compared to the older age groups, with a more marked peak. As the age increases, the prevalence rate not only decreases but also the peaks become less pronounced.
+
+### Sub-question 1.2.2: Is there a difference between men and women?
+
+To verify whether there is a difference between men and women, firstly we can make a boxplot to visualize the data.
+```{r,fig.width=4,fig.height=3,fig.align='center'}
+# divide data into two groups -- "Male" and "Female"
+q1.2.2_male_data <- filter(q1.2_prevalence_df, sex == "Male")
+q1.2.2_female_data <- filter(q1.2_prevalence_df, sex == "Female")
+
+df <- rbind(
+  data.frame(val = q1.2.2_male_data$val, gender = "Male"),
+  data.frame(val = q1.2.2_female_data$val, gender = "Female")
+)
+
+# generate graph 
+ggplot(df, aes(x = gender, y = val, fill = gender)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("#4ABEFF", "#FF6B6B")) +
+  labs(
+    
+    title = "Comparison of Prevalence between Genders",
+    x = "Gender",
+    y = "Prevalence"
+  ) +
+  theme_article() +
+  theme(
+    plot.title = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  )
+```
+
+Now we apply Shapiro-Wilk normality test to check whether the datasets fits the requirements to use t test.
+```{r}
+shapiro.test(q1.2.2_male_data$val) # p-value = 1.276e-06<0.05 not normal distribution
+```
+Since the p-value (1.276e-06) is less than the significance level of 0.05, we reject the null hypothesis that the male data follows a normal distribution.
+
+```{r}
+shapiro.test(q1.2.2_female_data$val) # p-value = 8.645e-07<0.05 not normal distribution
+```
+Since the p-value (8.645e-07) is less than the significance level of 0.05, we reject the null hypothesis that the female data follows a normal distribution.
+
+Then we can not use t test, since that the t test requires the datasets must follow normal distribution. The Wilcoxon rank sum test is used to determine if there are any statistically significant difference between the distributions of the male and female data. This non-parametric test is suitable when the datasets do not follow a normal distribution.
+
+```{r}
+# use Wilcoxon rank sum test to determine if there are differences between different genders
+wilcox.test(q1.2.2_male_data$val,q1.2.2_female_data$val,paired = FALSE) # p-value < 2.2e-16
+```
+
+The p-value (< 2.2e-16) is less than the significance level of 0.05, therefore, we reject the null hypothesis that the distributions of the male and female prevalence are the same.
+
+Combining the observations from the box plot and the results of the statistical tests, we can conclude that there is a statistically significant difference in the prevalence of alcohol-related diseases between men and women in the East Asia and Pacific region, with men having a higher prevalence than women.
+
+## Question 1.3: Looking at the data from the United States, can you confirm an increase in the prevalence of diseases related to opioid use? What age group is the most affected?
+
+This question focuses on exploring the potential "opioid epidemic" in the US and its impact on the prevalence of opioid-related disease. Since the 1990s, opioid use is increasing. As a result, find out the relationship between years and opioid-related disease is essential to anwaser the question.
+
+### Sub-question 1.3.1: Comfirming an increase in the prevalence of disease related to opioid use
+
+The analysis begins by filtering the dataset to include only the data related to North America (the United States), opioid use disorders, and the prevalence measure. The data is then summarized and aggregated to calculate the average total value, upper mean, and lower mean for each combination of location, year, age, and sex.
+
+```{r,warning=FALSE,message=FALSE}
+q1.3_opioid_America <- health_df %>%
+  filter(location == 'North America', cause == 'Opioid use disorders', measure == 'Prevalence')
+q1.3_opioid_America_sum <- q1.3_opioid_America %>%
+  group_by(location, year, age, sex) %>%
+  summarise(total_value = sum(val, na.rm = TRUE),upper_mean = sum(upper, na.rm = TRUE),lower_mean= sum(lower, na.rm = TRUE))
+
+q1.3_opioid_America_mean <- q1.3_opioid_America_sum %>%
+  group_by(location, year, age) %>%
+  summarise(
+    average_total_value = mean(total_value, na.rm = TRUE),
+    average_upper_mean = mean(upper_mean, na.rm = TRUE),
+    average_lower_mean = mean(lower_mean, na.rm = TRUE)
+  )
+
+head(q1.3_opioid_America_mean, 2)
+```
+
+The original data provides a single point estimate for each combination of location, year, age, but it does not capture the inherent variability or uncertainty associated with these estimates.
+
+By simulating additional data points, the analysis aims to create a more realistic representation of the underlying distribution of the prevalence values. This is achieved by incorporating the uncertainty information provided in the original data, specifically the upper and lower bounds of the estimates.
+
+The simulation function calculates the standard deviation (sd_value) based on the difference between the average upper mean and average lower mean, assuming a normal distribution and a specific confidence level (e.g., 99.99% in this case). Then the simulator adds 3 simulated points to the data set for each situation.
+
+```{r}
+set.seed(11)
+q1.3_simulated_data <- do.call(rbind, lapply(split(q1.3_opioid_America_mean, seq(nrow(q1.3_opioid_America_mean))), function(x) {
+  x$year <- as.factor(x$year)
+  m <- x$average_total_value
+  s <- (x$average_upper_mean - x$average_lower_mean) / (2 * qnorm(0.9999))
+  tibble(
+    location = rep(x$location[1], 4),
+    year = rep(x$year[1], 4),
+    age = rep(x$age[1], 4),
+    average_total_value = c(m, rnorm(3, m, s))
+  )
+}))
+```
+
+To analyse the overall trend change, the data is split into two periods: early-middle 1990s (1992-1997) and late 1990s (1998-2003). We want to verify whether the 'opioid epidemic' cause an increasement of opioid related disease prevalence, which can be identified by comparing slope and slope changes.
+
+```{r}
+q1.3_early1990 <- q1.3_simulated_data %>%
+  mutate(year = as.numeric(as.character(year))) %>%
+  filter(year < 1998 & year>=1992)
+q1.3_late1990 <- q1.3_simulated_data %>%
+  mutate(year =as.numeric(as.character(year))) %>%
+  filter(year >= 1998 & year <=2003)
+```
+
+Scatter plots are created for each age group, showing the relationship between the year and the average total prevalence. Here we just show one of them (late 1900s).
+```{r,eval=FALSE}
+ggplot(q1.3_early1990, aes(x = year, y = average_total_value, color = age)) +
+  geom_point() +
+  facet_wrap(~ age, scales = "free") +
+  labs(title = "Scatterplots of Total Prevalence vs Year by Age Group",
+       y = "Prevalence")+
+  theme_article()
+```
+
+```{r,fig.width=5,fig.height=4,fig.align='center'}
+ggplot(q1.3_late1990, aes(x = year, y = average_total_value, color = age)) +
+  geom_point() +
+  facet_wrap(~ age, scales = "free") +
+  scale_x_continuous(breaks = c(min(q1.3_late1990$year), max(q1.3_late1990$year)),
+                     labels = c(min(q1.3_late1990$year), max(q1.3_late1990$year))) +
+  labs(title = "Scatterplots of Total Prevalence vs Year by Age Group",  y = "Prevalence") +
+  theme_article()+
+  theme(plot.title = element_text(size = 10)) 
+```
+
+This code is fitting linear regression models for each age group, separately for the late 1990s (1998-2003) and early-middle 1990s (1992-1997) periods. The models_late and models_early objects contain the fitted linear regression models for each age group in their respective periods.
+```{r}
+models_late <- q1.3_late1990 %>%
+  group_by(age) %>%
+  do(model = lm(average_total_value ~ year, data = .))
+models_early <- q1.3_early1990 %>%
+  group_by(age) %>%
+  do(model = lm(average_total_value ~ year, data = .))
+```
+
+Then we check the assumptions of linear regression for each of the fitted models in the models_late object. It iterates over the list of models and generates four diagnostic plots for each model: residuals vs. fitted values, normal Q-Q plot, scale-location plot, and residuals vs. leverage plot. These plots help assess the assumptions of linearity, normality, homoscedasticity, and the absence of influential observations.
+
+```{r, eval=FALSE}
+for (i in 1:length(models_late$model)) {
+  par(mfrow = c(1,4))
+  plot(models_late$model[[i]])}
+for (i in 1:length(models_early$model)) {
+  par(mfrow = c(1,4))
+  plot(models_early$model[[i]])} 
+```
+
+Here is the analysis results of the late 1990s model of 25-29 year group as a example. Although not all subsets of real-world data can perfectly meet the assumptions, but we consider that most models fit these assumption and no model strangely break these rules, therefore these linear regression models are robust and acceptable.
+
+```{r,fig.height= 2.5,fig.width= 7}
+par(mfrow = c(1, 4),mar = c(4, 3, 2, 3), oma = c(0, 0, 2, 0))
+plot(models_late$model[[3]])
+```
+
+```{r}
+a.late <- map_dbl(models_late$model, ~ summary(.x)$coefficients[2, 1])
+a.early <- map_dbl(models_early$model, ~ summary(.x)$coefficients[2, 1])
+```
+
+The regression coefficients (slopes) for the year variable are compared between the late and early periods using the Wilcoxon signed-rank test. The null hypothesis assumes that there is no difference between the slopes in the late and early periods, while the alternative hypothesis suggests that the slopes in the late period are significantly greater than those in the early-middle period.
+
+```{r}
+wilcox.test(a.late,a.early,alternative = "greater", paired = TRUE)
+```
+
+The p-value of 0.001953 obtained from the test indicates that the null hypothesis can be rejected at a significance level of 0.05. This provides evidence that the slopes in the late period are indeed significantly greater than those in the early period, confirming an increasing trend in the prevalence of opioid-related diseases in the United States since the late 1990s.
+
+### Sub-question 1.3.2: Which age group is the most affected one? 
+
+To accurately determine the most affected age group, we believe that it is essential to analyze both the absolute growth in prevalence and the relative increase in the rate of change. Thus we calculates the fold change in the regression slopes between the late and early periods for each age group.
+
+```{r}
+fold <- a.late/a.early
+max_increasement_change_index <- which.max(fold)
+max_slope_index <- which.max(a.late)
+cat(sprintf("The group with the most affected incraesement rate:%d", max_increasement_change_index))
+cat(sprintf("The group with the highest slope:%d", max_slope_index))
+```
+
+This indicates that the 55-59 age group (index 7) experienced the most significant increase in the prevalence of opioid use disorders increasement rate during the late period compared to the early period, while the 25-29 age group (index 1) faced with the highest regression slope, which means the highest increasement rate.
+
+## Question 2 Background
+
+Giorgi et al. (2020) (https://pubmed.ncbi.nlm.nih.gov/32053866/) highlighted the severe impact of excessive alcohol use in the United States, with over 88,000 annual deaths and an over $250 billion economic burden. This underscores the gravity of alcohol abuse within North America. However, comprehending the true extent of this issue requires a deeper analysis of mortality and morbidity data across different regions. The "deaths" and "prevalence" columns in the provided dataset offer valuable insights into the ratio of morbidity to mortality (Deaths/Prevalence ratio) in various regions. This ratio is influenced by multifaceted factors such as social inequality, gender dynamics, and age demographics. These unresolved complexities trigger our interest in exploring the intricate relationship between alcohol-related Deaths/Prevalence Ratio and variables like year, gender, and age within North America.
+
+## Question 2.1: How is the Deaths/ Prevalence Ratio changing in Northern American caused by alcohol abuse over time?
+Firstly, we calculate people's deaths/ prevalence ratio of each age and sexes.Then we use population structure data of north America obtained from https://www.populationpyramid.net/northern-america/ to calculate the proportions of each age ranges and sexes in Northern America. With two data sets, we use weighted average method to get a reasonable overall deaths/ prevalence ratio integration both genders and the whole age range present in the original data from substance_use.csv. We also clean and merge the datasets to facilitate plotting and analysis.
+```{r}
+alcohol_df <- health_df %>%
+  filter(cause == 'Alcohol use disorders')
+q2.prevalence_death <- alcohol_df[,c(-5,-6,-9,-10)] %>%
+  pivot_wider(names_from = measure, 
+              values_from = val)%>%
+  filter(location=="North America")
+q2.prevalence_death$death_prevalence=q2.prevalence_death$Deaths/q2.prevalence_death$Prevalence
+q2.1.male_prop <- read.csv("male_prop.csv")
+q2.1.female_prop <- read.csv("female_prop.csv")
+
+q2.1.prevalence_death_total=q2.prevalence_death$death_prevalence
+
+q2.1.total_prop <- (q2.1.male_prop[,-(1:2)] + q2.1.female_prop[,-(1:2)]) / 2
+q2.1.total_prop$year <- q2.1.male_prop$year
+
+q2.1.avg_prevalence <- health_df %>%
+  group_by(age,year) %>%
+  summarize(avg_prevalence = mean(val),.groups="drop")
+q2.1.prevalence_prop <- merge(q2.1.total_prop, q2.1.avg_prevalence, by.x = "year", by.y = "year")
+
+age_map <- c("25.29" = "25 to 29", "30.34" = "30 to 34", "35.39" = "35 to 39", 
+             "40.44" = "40 to 44", "45.49" = "45 to 49", "50.54" = "50 to 54",
+             "55.59" = "55 to 59", "60.64" = "60 to 64")
+
+q2.1.prevalence_prop$weighted_prevalence <- NA
+```
+
+Then we plot the overall trend of deaths/prevalence ratio along the years:
+```{r,fig.width=4,fig.height=2}
+for (i in unique(q2.1.prevalence_prop$year)) {
+  year_data <- q2.1.prevalence_prop[q2.1.prevalence_prop$year == i, ]
+  weighted_prevalence <- sum(year_data[, paste0("X", names(age_map))] * 
+                               year_data[year_data$age %in% age_map, "avg_prevalence"])
+  q2.1.prevalence_prop[q2.1.prevalence_prop$year == i, "weighted_prevalence"] <- 
+    weighted_prevalence
+}
+q2.1.prevalence_prop <- q2.1.prevalence_prop[, c("year", "weighted_prevalence")]
+q2.1.prevalence_prop <- q2.1.prevalence_prop[!duplicated(q2.1.prevalence_prop), ]
+ggplot(q2.1.prevalence_prop, aes(x = year, y = weighted_prevalence)) +
+  geom_line() +
+  labs(x = "Year",
+       y = "Deaths/ Prevalence") +
+  theme_article()
+```
+
+Based on the line plot, the relationship between deaths/ prevalence and year seem to be linear. Therefore, Pearson correlation test is performed to verify the linear relationship between the two variables.
+```{r}
+cor.test(q2.1.prevalence_prop$year, q2.1.prevalence_prop$weighted_prevalence)
+```
+Since that the p-value is less than the significant level 0.05, and the correlation coefficient is 0.99, we can confirm a strong positive linear relationship between the deaths/prevalence ratio and time. The deaths /prevalence ratio changing in Northern American caused by alcohol abuse continuously increases over time.
+
+## Question 2.2: Is there significant gender difference in Deaths/ Prevalence ratio in North America?
+
+Next, we compare the difference in the ratio of deaths to prevalence (Deaths/Prevalence) between males and females in North America. We first conduct a Shapiro-Wilk normality test and find that the data for males and females in North America do not follow a normal distribution (p-value < 0.05).  
+
+```{r,fig.width=4,fig.height=3,fig.align='center'}
+q2.2.prevalence_death <- alcohol_df %>%
+  dplyr::filter(location == "North America") %>%  
+  dplyr::select(-c(5, 6, 9, 10)) %>%
+  pivot_wider(names_from = measure, values_from = val) 
+
+q2.2.prevalence_death$death_prevalence <- q2.2.prevalence_death$Deaths / q2.2.prevalence_death$Prevalence
+
+q2.2.prevalence_death$sex <- factor(q2.2.prevalence_death$sex, levels = c("Male", "Female"))
+
+shapiro_test <- lapply(split(q2.2.prevalence_death$death_prevalence, q2.2.prevalence_death$sex), shapiro.test)
+shapiro_results <- data.frame(
+  p.value = sapply(shapiro_test, "[[", "p.value")
+)
+print(shapiro_results)
+```
+
+Therefore, we opt for the Wilcoxon rank sum test. Our null hypothesis (H0) is that there is no significant difference in the ratio of deaths to prevalence between males and females in North America, meaning that gender does not influence the ratio. The alternative hypothesis (H1) is that there is a significant difference in the ratio of deaths to prevalence between males and females in North America, meaning that gender influence this ratio. 
+
+```{r,fig.width=4,fig.height=3,fig.align='center'}
+wilcox_result <- wilcox.test(death_prevalence ~ sex, data = q2.2.prevalence_death)
+print(wilcox_result)
+
+results <- data.frame(Location = character(), p.value = numeric(), sig = character())
+
+loc <- unique(q2.2.prevalence_death$location)
+data_loc <- filter(q2.2.prevalence_death, location == loc)
+wilcox_res <- wilcox.test(death_prevalence ~ sex, data = data_loc)
+sig <- ifelse(wilcox_res$p.value < 0.001, '***', '')
+results <- data.frame(Location = loc, p.value = wilcox_res$p.value, sig = sig)
+
+results$Location <- factor(results$Location, levels = unique(q2.2.prevalence_death$location))
+max_values <- q2.2.prevalence_death %>%
+  group_by(location) %>%
+  summarise(max_death_prevalence = max(death_prevalence))
+
+results <- merge(results, max_values, by.x = 'Location', by.y = 'location')
+
+
+ggplot(data = q2.2.prevalence_death) +
+  geom_boxplot(mapping = aes(x = factor(location, levels = unique(location)),
+                             y = death_prevalence,
+                             color = sex)) +
+  geom_text(data = results, aes(x = Location, y = max_death_prevalence, label = sig), 
+            vjust = 1, color = "black") + 
+  labs(x = "Location", y = "Deaths/ Prevalence") +
+  egg::theme_article() 
+```
+
+We obtain a p-value of 4.848e-05 from the Wilcoxon rank sum test, which is much smaller than 0.01, denoted as ***, indicating a highly significant difference. Therefore, we reject the null hypothesis (H0) and conclude that there is indeed a significant difference in the ratio of deaths to prevalence between males and females in North America. This suggests that gender does influence this ratio.
+
+This may be due to various factors. On one hand, physiological differences may lead to variations in alcohol metabolism and response between men and women.  Additionally, sociocultural factors might play a role, such as in some cultures where men are more likely to engage in high-risk drinking behaviors. On the other hand, interestingly, we find that in North America, women have lower chance to get effective healthcare after suffering from alcohol-related diseases. This could be due to lack of awareness and screening for women's alcohol-related health issues, or a weaker focus on preventative care and early intervention.
+
+## Question 2.3: Is there any difference between Deaths/Prevalence of different ages in North America?
+Based on the above analysis, we have learned that there are differences in deaths/ prevalence ratios between different genders in North America. So, is there a difference in deaths/prevalence ratios among different age groups? We construct a dot-line plot with time (year) on the x-axis and alcohol-related deaths/prevalence ratios on the y-axis, segmented by age and gender. Ultimately, we discover that both genders exhibit relatively higher deaths/prevalence ratios within the middle-aged population (about 40-54 years old).
+
+```{r,fig.width=8,fig.height=3,fig.align='center'}
+q2.3prevalence_death <- q2.prevalence_death %>%
+  filter(location == "North America")
+
+ggplot(q2.3prevalence_death, aes(x = year, y = death_prevalence, color = age)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~ age, scales = "free") +
+  facet_wrap(~ sex, scales = "fixed") +
+  theme_article() +
+  labs(title = "Dot-line Plot Deaths/ Prevalence vs Year by Age Group",
+       y="Deaths/ Prevalence")
+
+```
+
+
+## Question 2.4: Does the Deaths/prevalence ratio significantly differ between male and female individuals in various age groups across North America?
+
+Based on the dot-line plot above, it is found that alcohol-related deaths/prevalence shows difference between various aged people both in male and female and middle aged people seem to have highest deaths/prevalence. Thus, we group both male and female north Americans into 3 age groups, "Young Group", "Middle Group" and "Senior Group". Our hypothesis is that north american people in different 3 age groups have different deaths/prevalence ratio and middle aged people have highest deaths/prevalence.
+
+After cleaning the data, we test the normality of residuals and the homogeneity of variances for alcohol related deaths/prevalence of male and female north Americans respectively, using Q-Q plot and "residual vs fitted" plot. We find that the residuals are normal, while the variances are not equal in both male and female datasets. Therefore, Welch ANOVA tests are chosen to perform for our data.
+
+
+```{r,fig.width=7,fig.height=2.5,fig.align='center'}
+q2.4.prevalence_death<-q2.prevalence_death
+q2.4.prevalence_death$age_group<-NA
+q2.4.prevalence_death[q2.4.prevalence_death$age%in%
+                                     c("25 to 29","30 to 34","35 to 39"),]$age_group<-"Young Group"
+q2.4.prevalence_death[q2.4.prevalence_death$age%in%
+                                     c("40 to 44","45 to 49","50 to 54"),]$age_group<-"Middle Group"
+q2.4.prevalence_death[q2.4.prevalence_death$age%in%
+                                     c("55 to 59","60 to 64","65 to 69"),]$age_group<-"Senior Group"
+
+q2.4.prevalence_death$age_group <- factor(
+  q2.4.prevalence_death$age_group,
+  levels = c("Young Group", "Middle Group", "Senior Group"))
+q2.4.prevalence_death_male<-q2.4.prevalence_death[
+  q2.4.prevalence_death$sex%in%"Male",]
+q2.4.prevalence_death_female<-q2.4.prevalence_death[
+  q2.4.prevalence_death$sex%in%"Female",]
+#male
+q2.4.res_aov_male <- aov(death_prevalence ~ age_group,data = q2.4.prevalence_death_male)
+par(mfrow = c(1, 4)) # combine plots
+# 1. QQ-plot
+car::qqPlot(q2.4.res_aov_male$residuals,id = FALSE,ylab = "male residuals")
+# 2. Homogeneity of variances
+plot(q2.4.res_aov_male, which = 3)
+#female
+q2.4.res_aov_female <- aov(death_prevalence ~ age_group,data = q2.4.prevalence_death_female)
+# 1. QQ-plot
+car::qqPlot(q2.4.res_aov_female$residuals,id = FALSE, ylab = "female residuals") 
+# 2. Homogeneity of variances
+plot(q2.4.res_aov_female, which = 3)
+
+```
+
+For males (females)
+H0: There is no difference of deaths/prevalence ratios between different male (female) age groups in north America.
+H1: At least in one male (female) age group the alcohol-related deaths/prevalence ratios are different from other groups in north America.
+
+The results of Welch ANOVA for female and male reveal that at least in one male (female) age group the alcohol-related deaths/prevalence ratios are different from other groups in north America with both p values < 2.2e-16.
+
+```{r}
+oneway.test(death_prevalence ~ age_group,data = q2.4.prevalence_death_female,var.equal = F)
+oneway.test(death_prevalence ~ age_group,data = q2.4.prevalence_death_male,var.equal = F)
+
+```
+Since the Welch ANOVA show difference between age groups, Post-hoc tests (Tukey HSD tests) are subsequently conducted to compare the differences between each pair of groups.
+
+```{r}
+q2.4.post_test_female <- glht(q2.4.res_aov_female,linfct = mcp(age_group = "Tukey"))
+q2.4.post_test_male <- glht(q2.4.res_aov_male,linfct = mcp(age_group = "Tukey"))
+```
+
+```{r}
+summary(q2.4.post_test_female) #Female Tukey HSD test result between different groups
+```
+
+```{r}
+summary(q2.4.post_test_male) #Male Tukey HSD test result between different groups
+```
+
+```{r,fig.height=4.3,fig.align='center',warning = FALSE}
+q2.4.ANOVAmale_plot<-ggbetweenstats(
+  data = q2.4.prevalence_death_male,
+  x = age_group, y = death_prevalence,type = "parametric",
+  var.equal = F, plot.type = "box", pairwise.comparisons = TRUE,
+  results.subtitle = FALSE,pairwise.display = "all",centrality.plotting = FALSE,
+  bf.message = FALSE, ggtheme = egg::theme_article(),
+  
+  title = "Male deaths/ prevalence in age groups",xlab = "Age Group",
+  ylab = "Deaths/Pravelence")+ theme(plot.title = element_text(size = 10))
+
+q2.4.ANOVAfemale_plot<-ggbetweenstats(
+  data = q2.4.prevalence_death_female,
+  x = age_group, y = death_prevalence,type = "parametric",
+  var.equal = F, plot.type = "box", pairwise.comparisons = TRUE,
+  results.subtitle = FALSE,pairwise.display = "all",centrality.plotting = FALSE,
+  bf.message = FALSE, ggtheme = egg::theme_article(),
+  
+  title = "Female deaths/ prevalence in age groups",xlab = "Age Group",
+  ylab = "Deaths/Pravelence")+ theme(plot.title = element_text(size = 10))
+
+cowplot::plot_grid(q2.4.ANOVAfemale_plot,q2.4.ANOVAmale_plot, ncol = 2)
+```
+
+For female individuals in North America, significant differences are observed in alcohol-related deaths/prevalence among the young, middle, and senior age groups when compared with each other. The adjusted p-values indicate significant differences, with p.adjusted < 1e-10 between the middle and young groups, p.adjusted < 1e-10 between the senior and middle groups, and p.adjusted = 2.68e-10 between the senior and young groups.
+
+For male individuals in North America, significant differences are found between the young and middle age groups (p.ajusted < 1e-10), as well as between the senior and middle age groups (p.ajusted < 1e-10), regarding alcohol-related deaths/prevalence.   However, no significant difference is observed between the young and senior age groups (p.ajusted = 0.894) in terms of alcohol-related deaths/prevalence.
+
+Overall, middle aged people has statistically significantly highest alcohol-related deaths/prevalence compared with both young and senior people for male and female north Americans.
