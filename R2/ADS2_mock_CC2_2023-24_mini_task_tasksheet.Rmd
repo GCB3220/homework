@@ -1,0 +1,91 @@
+---
+title: "ADS2 Mock Coding Challenge 2"
+date: "Semester 2, 2023-24"
+output: pdf_document
+---
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+time 
+```{r}
+Sys.time()
+```
+
+
+# Treatment for type 1 diabetes (T1D)
+
+Your team developed an insulinomimetic that can be used to substitute insulin in patients with T1D. You induced T1D in mice by injecting them with streptozotocin (this drug destroys pancreatic $/beta$/-cells, which abrogates insulin production and leads to the loss of control over glucose metabolism). Subsequently, mice were injected with vehicle or this novel drug in 2 possible concentrations. Their blood glucose level (mM) was measured before the injection and 1 hour after.
+
+Answer the questions below and provide clear and reproducible code as well as your comments.
+
+## Import, check, and organize the data appropriately. Treat data and reformat columns if needed.
+
+import and view
+```{r}
+data <-read.csv("t1d_drug.csv")
+head(data, 10)
+```
+summary
+```{r}
+summary(data)
+```
+check NA and duplicate
+```{r}
+anyNA(data)
+anyDuplicated(data)
+```
+find NA
+```{r}
+head(subset(data, Comment == "Died" & Measurement == "Glucose_after"))
+```
+remove died mouse
+```{r}
+data_no_died <- subset(data, Comment != "Died")
+```
+turn to the longer
+```{r}
+data_analysis <- data_no_died %>% pivot_wider(names_from = Measurement, values_from = Glucose) %>% select(!Comment)
+
+data_analysis$Diff <- data_analysis$Glucose_before-data_analysis$Glucose_after
+```
+
+## Plot the data in a useful way.
+```{r}
+p1 <- ggplot(data_no_died)
+p2 <- p1 + geom_boxplot(aes(x=Treatment, y=Glucose, fill=Measurement))
+p2
+```
+
+## Choose, justify, state the statistical hypotheses, and carry out an appropriate test to answer whether the drug is useful.
+use ANOVA
+```{r}
+model <- aov(Diff~Treatment, data_analysis)
+```
+  -H0:
+  -H1:
+assumption test
+maybe use plot to judge. QQ for normal, 
+```{r, eval}
+par(mfrow = c(1, 4))
+plot(model)
+```
+three: random and independent, normal distribution of reseidual, homogeneity of variance
+```{r}
+shapiro.test(resid(model))
+```
+```{r}
+bartlett.test(Diff~Treatment, data_analysis)
+```
+anova result analysis
+```{r}
+summary(model)
+```
+```{r}
+TukeyHSD(model)
+```
+
+## Present and discuss your results. Is this novel drug useful? What would you suggest doing next?
+useful
+power estimate

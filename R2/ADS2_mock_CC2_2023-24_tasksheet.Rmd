@@ -1,0 +1,274 @@
+---
+title: "ADS2 Mock Coding Challenge 2"
+date: "Semester 2, 2023-24"
+output: pdf_document
+---
+```{r, include=FALSE}
+library(tidyverse)
+library(pwrss)
+library(car)
+```
+
+Use library:
+```{r, eval=FALSE}
+library(tidyverse)
+library(pwrss)
+```
+
+Knit time:
+```{r}
+Sys.time()
+```
+
+# 1. Vitamin C and tooth growth
+
+Lack of vitamin C leads to severe health issues. It is not produced in the human body and must be supplied with food. At the same time, personnel that have limited access to fresh vegetables (sailors, spacemen, travelers, etc) may suffer from the insufficiency of this compound in their food. Thus, a vitamin C formulation that can preserve its properties for a long time is of great need.
+
+Researchers developed such a formulation. *In vitro* tests showed its efficiency. Now, they performed an *in vivo* trial. Guinea pigs received the newly developed formulation of Vitamin C or fresh orange juice (normalized according to the concentration of vitamin C) in addition to their standard diet (`supp`). Each type of additives included three concentrations (`dose`) of vitamin C: 0.5, 1, and 2 mg/ml. The measured outcome is the tooth length (`len`) in mm (stem cells that become teeth are sensitive to vitamin C).
+
+## Import, check, and organize the data appropriately. Reformat columns if needed.
+
+Import and check data:
+
+```{r}
+teeth <- read.csv("teeth.csv")
+head(teeth, 10)
+```
+
+Then check if NA and duplication exist:
+
+```{r}
+anyNA(teeth)
+anyDuplicated(teeth)
+```
+
+Check detail information
+
+```{r}
+str(teeth)
+
+group_by(teeth, supp, dose) %>%
+  summarise(
+    count = n(),
+    mean = mean(len, na.rm = TRUE),
+    sd = sd(len, na.rm = TRUE)
+  )
+```
+
+From above we can see there is no NA or duplicated data. But structure is not good: -Column supp and does class is chr/num, is is not good for later analysis.
+
+```{r}
+teeth <- teeth %>% mutate(supp=as.factor(supp), dose=as.factor(dose))
+```
+
+## Plot the data in a useful way.
+
+This study contains two variables: supplement and dose.
+
+```{r}
+teeth_p <- ggplot(data=teeth)
+teeth_p1 <- teeth_p + geom_boxplot(aes(x=dose, y=len, fill=supp))
+teeth_p1
+```
+
+## Choose, justify, state the statistical hypotheses, and carry out an appropriate test to answer whether the vitamin C formula is useful.
+
+Because this experiment has two variable and six groups, so I decide to use ANOVA
+
+```{r}
+teeth_aov <- aov(len~supp*dose, teeth)
+```
+
+The assumption of ANOVA is:
+
+1.  random sample (just assume this)
+2.  residual normal distribution
+3.  homogeneity of variance 4. equal group size
+
+So I use shapiro test to test normality and bartlett to test homogeneity
+
+```{r}
+shapiro.test(resid(teeth_aov))
+bartlett.test(len~supp, teeth)
+bartlett.test(len~dose, teeth)
+leveneTest(len ~ supp*dose, data = teeth)
+```
+
+Group size:
+
+```{r}
+summary(teeth$supp)
+summary(teeth[teeth$supp=="OJ", ]$dose)
+summary(teeth[teeth$supp=="VC", ]$dose)
+table(teeth$supp, teeth$dose)
+```
+
+H0: means of different supp groups are the same
+H1: means of different supp groups are NOT the same
+Then I check the result
+
+```{r}
+summary(teeth_aov)
+```
+
+It seems significant difference between each group. So I use TukeyHSD to check each groups
+
+```{r}
+TukeyHSD(teeth_aov)
+```
+
+```{r}
+kruskal.test(len~supp, data = teeth)
+```
+This suggest that supp and does both 
+
+## Present and discuss your results. Is this novel formula useful? What would you suggest doing next? The result shows above suggests that
+
+-   formulation shows diff
+-   low not, high seem
+-   used to substitute natural dietary vitamin C, but only at a high dose
+
+Later work:
+
+-   this less of no cure group (like treat with water) to show effect
+-   it is possible to run some toxicological tests
+-   sample size?
+
+```{r}
+pwrss.f.ancova(eta2 = 0.6, n.levels = c(3,2), alpha = 0.05, power = 0.80)
+```
+
+\newpage
+
+# 2. Mutation and survival
+
+You work on the mutation of a certain gene (Gene_X) that likely causes developmental abnormalities in humans but is quite rare, and the precise role of the mutation is not known. You created a mouse model by introducing a similar mutation in a similar location within the murine genome.
+
+You set several breeding pairs and crossed mice as Gene_X^WT/mut^ $\times$ Gene_X^WT/mut^. You recorded the genotype of the newborn mice. Your genotyping record (`genotype.csv`) includes `mouse_ID`, birth date (`BD`), `sex`, and `genotype`.
+
+Answer the questions below, provide your analysis, and explain your results. Given the genotyping records you got, what can you say about the studied mutation?
+
+## Import and organize the data.
+
+```{r}
+gene <- read.csv("genotype.csv")
+head(gene)
+```
+
+```{r}
+anyNA(gene)
+anyDuplicated(gene)
+```
+
+```{r}
+gene_t <- table(gene$sex, gene$genotype)
+gene_t <- matrix(gene_t, ncol=3, dimnames=dimnames(gene_t))
+gene_t
+```
+
+## *Describe* the data in a useful way.
+
+```{r}
+gene_p <- ggplot(gene, mapping = aes(x=genotype, fill=sex))
+gene_p1 <- gene_p + geom_bar(stat = "count")
+gene_p1
+```
+
+## What would you expect under Mendelian inheritance?
+
+```{r}
+gene_e <- matrix(
+  c(20, 10, 10, 20, 10, 10),
+  nrow = 2,
+  byrow = TRUE,
+  dimnames = list(c("female", "male"), c("het", "mut", "wt"))
+)
+gene_e
+chisq.test(gene_t)$expect
+```
+
+## Choose and justify the appropriate statistical test, state the statistical hypotheses, and carry the test out an appropriate test on whether the mutation affects the survival of mice.
+H0: The data follow the expected distribution 
+HA: The data does not follow the expected distribution 
+```{r}
+chisq.test(gene_t, cbind(c(0.25, 0.125, 0.125), c(0.25, 0.125, 0.125)))
+fisher.test(gene_t, cbind(c(0.25, 0.125, 0.125), c(0.25, 0.125, 0.125)))
+```
+
+```{r}
+mouse_data <- array(c(40, 9, 34, 7, 20, 15, 25, 20), dim = c(2, 2, 2))
+dname <- list(status = c("Alive", "Dead"),
+sex = c("Male", "Female"),
+Genotype = c("WT", "KO"))
+dimnames(mouse_data) <- dname
+mouse_data
+```
+```{r}
+mouse_data <- as.table(mouse_data)
+summary(mouse_data)
+```
+
+## Present and discuss your results. What would you suggest doing next?
+
+- mutation affects the survival of mice
+- mutant males and females seem to be affected differently
+
+later:
+- identify cells that express the target gene and see if this mutation affects them and how. 
+- why did they survive? Is there a special molecular pathway
+
+\newpage
+
+# 3. Coffee shop opening hours
+
+A new coffee shop has opened on campus. Hooray! Coffee shops are normally open from 6am-5pm but the owners are aware that students often sleep later than other members of the society. After being open for one month, they run a month-long trial opening 10am-9pm to see if students prefer these times. They leave an iPad at the serving counter where customers can record if they are 'satisfied' or 'unsatisfied' with the opening times.
+
+During the 6am-5pm opening times, the iPad records 864 presses of the 'satisfied' button by customers and 714 presses of the 'unsatisfied' button. When they change these times to 10am-9pm, they receive 980 'satisfied' pressed and 473 'unsatisfied'.
+
+## What would be a suitable statistical test for these data and why?
+
+not independent and random -\> bootstrap 
+
+## What are your null and alternative hypotheses?
+
+ Null hypothesis: there is no difference between the proportion of students who are satisfied with an early or late opening time
+ Alternative hypothesis: there is a difference between the proportion of students or students prefer a late opening time (this would be the equivalent of a one-tailed test)
+
+## Are students more satisfied with the early or later opening times?
+```{r}
+first_satisfied <- 864
+first_unsatisfied <- 714
+second_satisfied <- 980
+second_unsatisfied <- 473
+
+first_bootstraps <- vector()
+second_bootstraps <- vector()
+
+first_results <- c(rep(1, first_satisfied), rep(0, first_unsatisfied))
+second_results <- c(rep(1, second_satisfied), rep(0, second_unsatisfied))
+
+for (a in 1:100) {
+  first_sample <- 
+    mean(sample(first_results, length(first_results), replace = T))
+  second_sample <-
+    mean(sample(second_results, length(second_results), replace = T))
+  first_bootstraps <- c(first_bootstraps, first_sample)
+  second_bootstraps <- c(second_bootstraps, second_sample)
+}
+
+first_upper <- quantile(first_bootstraps, probs = c(0.975))
+second_lower <- quantile(second_bootstraps, probs = c(0.025))
+
+boxplot(
+  first_bootstraps,
+  second_bootstraps,
+  notch = T,
+  names = c('early', 'late'),
+  ylab = 'Prop. of satisfied button presses'
+)
+
+```
+
+Yes, students clearly preferred the later times as shown by the nonoverlapping confidence intervals. This could be judged either by boxplot as here or the non-overlapping confidence intervals.
+
+I would also suggest we award marks here for correctly performing a chi-squared test here. We would have already penalised students for making the wrong choice of test earlier so they should not be double-penalied.
